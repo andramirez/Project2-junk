@@ -1,0 +1,143 @@
+<html>
+    <head>
+        <title>
+            Chatroom Web App
+        </title>
+        <!--css link-->
+        <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='style.css') }}">
+        <script>
+         function hideShow(){
+              document.getElementById("live").style.visibility = "hidden";
+              document.getElementById("content").style.visibility = "block";
+          }
+        </script>
+        <!--Google sign in client id-->
+        <meta name="google-signin-client_id" content="985898840926-hgsdmkcas5969msavv6oe3tf4e651k5d.apps.googleusercontent.com">
+        <script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js" ></script>
+        <script> //Google config
+            var config = {
+              apiKey: "AIzaSyDXp6A8ufNojIuH9yJhmwmsc_NtC0cXPx0",
+              authDomain: "project2-876ff.firebaseapp.com",
+              databaseURL: "https://project2-876ff.firebaseio.com",
+              storageBucket: "project2-876ff.appspot.com",
+              messagingSenderId: "867679115275"
+            };
+            firebase.initializeApp(config);
+        </script> 
+        <script src="//connect.facebook.net/en_US/sdk.js"></script>
+        <script> //facebook initializing
+          FB.init({
+            appId      : '186557178496930',
+            status     : true,
+            xfbml      : true,
+            version    : 'v2.6'
+          });
+        </script>
+        <script> //facebook login
+          function checkLoginState(event) {
+              if (event.authResponse) {
+                // User is signed-in Facebook.
+                var unsubscribe = firebase.auth().onAuthStateChanged(function(firebaseUser) {
+                  unsubscribe();
+                  // Check if we are already signed-in Firebase with the correct user.
+                  if (!isUserEqual(event.authResponse, firebaseUser)) {
+                    // Build Firebase credential with the Facebook auth token.
+                    var credential = firebase.auth.FacebookAuthProvider.credential(
+                        event.authResponse.accessToken);
+                    // Sign in with the credential from the Facebook user.
+                    firebase.auth().signInWithCredential(credential).catch(function(error) {
+                      // Handle Errors here.
+                      var errorCode = error.code;
+                      var errorMessage = error.message;
+                      // The email of the user's account used.
+                      var email = error.email;
+                      // The firebase.auth.AuthCredential type that was used.
+                      var credential = error.credential;
+                      // ...
+                    });
+                    hideShow();
+                  } else {
+                    // User is already signed-in Firebase with the correct user.
+                  }
+                });
+              } else {
+                // User is signed-out of Facebook.
+                firebase.auth().signOut();
+              }
+            }
+        </script>
+        <script src="https://apis.google.com/js/platform.js" async defer></script>
+        <script>
+            // Google Sign in
+            function onSignIn(googleUser) {
+              console.log('Google Auth Response', googleUser);
+              // We need to register an Observer on Firebase Auth to make sure auth is initialized.
+              var unsubscribe = firebase.auth().onAuthStateChanged(function(firebaseUser) {
+                unsubscribe();
+                // Check if we are already signed-in Firebase with the correct user.
+                if (!isUserEqual(googleUser, firebaseUser)) {
+                  // Build Firebase credential with the Google ID token.
+                  var credential = firebase.auth.GoogleAuthProvider.credential(
+                      googleUser.getAuthResponse().id_token);
+                  // Sign in with credential from the Google user.
+                  firebase.auth().signInWithCredential(credential).catch(function(error) {
+                    // Handle Errors here.
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    // The email of the user's account used.
+                    var email = error.email;
+                    // The firebase.auth.AuthCredential type that was used.
+                    var credential = error.credential;
+                    console.log('User signed out.');
+
+                  });
+                } else {
+                  console.log('User already signed-in Firebase.');
+                }
+              });
+            }
+        </script>
+        <script> //checks if user is already logged in
+            function isUserEqual(googleUser, firebaseUser) { 
+              if (firebaseUser) {
+                var providerData = firebaseUser.providerData;
+                for (var i = 0; i < providerData.length; i++) {
+                  if (providerData[i].providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID &&
+                      providerData[i].uid === googleUser.getBasicProfile().getId()) {
+                    // We don't need to reauth the Firebase connection.
+                    return true;
+                  }
+                }
+              }
+              return false;
+            }
+        </script>
+        <script> //signout of Google
+            function signOut() {
+                firebase.auth().signOut().then(function() {
+                  console.log('User signed out.');
+                }, function(error) {
+                  // An error happened.
+                });
+                changeView();
+          }
+        </script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div id="live" class = "small-container">
+              <h3>Please Sign In Using Google or Facebook</h3>
+              <!--Google button-->
+              <div id = "n" class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+              <!--Facebook button-->
+              <fb:login-button id = "fbB" class="fb" data-auto-logout-link="true" scope="public_profile,email" size="large"></fb:login-button>
+            </div>
+            <!--Sign out button-->
+            <div id="content" class="hide" style="visibility:hidden"><button id = "b1" onclick="signOut();">Sign out</button></div>
+        </div>
+
+        
+            
+    </body>
+</html>
